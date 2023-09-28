@@ -49,7 +49,7 @@ class Tplayer:
     def turn(self): #returns (empty) list of cards to be put down, second-last element is boolean: small Tichu?, last element: integer of card as wish
         output = []
         if len(self.upperTrick) <= 1 and self.wish != None and self.wish in self.cards:
-            output.append(self.wish)
+            output.append(self.wish) #The handling of the wish is not correct yet!
             self.cards.remove(self.wish)
             self.knockCounter = 0
         elif self.upperTrick == []:
@@ -69,7 +69,4 @@ class Tplayer:
         self.knockCounter = 0
         pass
 
-    def hasOne(self): #does Tplayer has the One?
-        if (1, 4) in self.cards:
-            return True
-        return False
+    #TODO: small Tichu not only when it is the players turn
