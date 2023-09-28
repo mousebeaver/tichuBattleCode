@@ -18,17 +18,39 @@ def rightID(i):
 class gameMaster:
     def __init__(self, moveDuration): #How long should the cards be displayed in seconds?
         self.moveDuration = moveDuration
-        self.pointsA = 0 #points of the teams
-        self.pointsB = 0
+        self.pointsA = 0 #points of the teams (0, 2)
+        self.pointsB = 0 #player(1, 3)
 
     def theGame(self): #game loop
         while self.pointsA < 1000 and self.pointsB < 1000:
-            self.startRound() #Play a single round
-            self.playRound
+            #Play a single round
+            self.startRound()
+            self.playRound()
 
     def playRound(self): #actually do a round
-        pass
+        while (not (len(self.cardHands[0]) == 0 and len(self.cardHands[2]) == 0)) and (not (len(self.cardHands[1]) == 0 and len(self.cardHands[3]) == 0)):
+            #the round is not over yet
 
+            #ask for a turn
+            turn = self.player[self.turn] #The turn the player actually does
+            #check whether the turn is illegal
+            
+            #inform the others about the turn
+
+            noBombCounter = 0 #How many players have chosen not to put down a bomb
+            while noBombCounter < 4:
+                #Handle bombs (legal? Tichu?)
+                break
+
+        #Award points
+    
+    def handleIllegalPlays(self, playerID): #If the player does an illegal move, 200 points are deducted and 200 are awarded to the other team
+        if playerID == 0 or playerID == 2:
+            self.A -= 200
+            self.B += 200
+        else:
+            self.B -= 200
+            self.A += 200
 
     def startRound(self):
         #generate card stack

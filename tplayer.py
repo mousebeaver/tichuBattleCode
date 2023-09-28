@@ -68,5 +68,3 @@ class Tplayer:
     def showBomb(self, bomb, player): #receives the bomb as list (last element is boolean for small Tichu) and the id of the player who put it down
         self.knockCounter = 0
         pass
-
-    #TODO: small Tichu not only when it is the players turn
