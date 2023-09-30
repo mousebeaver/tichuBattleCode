@@ -1,6 +1,6 @@
 """
 Cards are represented by pairs of integers:
--the first integer is the value. For special cards: 1->One, 0->Hound, 2->Dragon , 3->Phoenix
+-the first integer is the value. For special cards: 1->One, 0->Hound, 2->Dragon , 3->Phoenix, else 2-14
 -the second integer is the color (0-3 for normal colours, 4 for special cards)
 """
 
