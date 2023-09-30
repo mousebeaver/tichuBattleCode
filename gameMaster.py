@@ -3,6 +3,7 @@ import tplayer as tplayer1
 import tplayer as tplayer2
 import tplayer as tplayer3
 import numpy as np
+import copy
 
 #IDs of other players in relation to player with ID i
 def partnerID(i):
@@ -35,17 +36,20 @@ class gameMaster:
         self.pointsA = 0 #points of the teams (0, 2)
         self.pointsB = 0 #player(1, 3)
         self.controlCardStack = [(j, i) for j in range(13) for i in range(4)] + [(j, 4) for j in range(4)] #the whole set of cards
+        print("Finished the initialization of the Game")
 
     def theGame(self): #game loop
+        print("Starting the game")
         while self.pointsA < 1000 and self.pointsB < 1000:
             #Play a single round
             self.startRound()
             self.playRound()
 
     def playRound(self): #actually do a round
+        print("Playing the round")
         while (not (len(self.cardHands[0]) == 0 and len(self.cardHands[2]) == 0)) and (not (len(self.cardHands[1]) == 0 and len(self.cardHands[3]) == 0)) and self.legalRound:
             #ask for a turn
-            turn = self.player[self.turn] #The turn the player actually does            
+            turn = self.players[self.turn].turn() #The turn the player actually does            
 
             #check whether the turn is illegal...
             #...based on claiming a small Tichu
@@ -54,39 +58,43 @@ class gameMaster:
                 break
 
             #...based on making an illegal wish
-            w = turn(len(turn)-1)
+            w = turn[len(turn)-1]
             if turn[len(turn)-1] != None and (self.wish != None or turn[0] != (1, 4) or len(turn) != 3 or (not w in self.controlCardStack) or w.second == 4): 
                 self.handleIllegalPlays(self.turn)
                 break
 
             #...based on playing illegal cards
             for c in turn[:len(turn)-2]:
-                if (not c in self.controlCardStack) or (c in self.spentCards):
+                if (not c in self.cardHands[self.turn]) or (c in self.spentCards):
                     self.handleIllegalPlays(self.turn)
                     break
 
 
-            #set wish/Tichu/alreadyPlayed/knockCounter/spentCards/hands of players
+            #set wish/Tichu/alreadyPlayed/knockCounter/spentCards/hands of players/currentTrick
             if turn[len(turn)-2] == True: 
                 self.smallTichu[self.player[self.turn]] = True #The player claimed a small Tichu
 
             if turn[len(turn)-1] != None: 
                 self.wish = turn[len(turn)-1] #There is a wish
 
+            print(len(turn))
             if len(turn) > 2:
+                self.knockCounter = 0
                 self.playedAlready[self.turn] = True
                 for c in turn[:len(turn)-2]:
                     self.spentCards.append(c)
-                    self.players[self.turn].remove(c)
+                    self.cardHands[self.turn].remove(c)
             else:
                 self.knockCounter += 1
 
+            self.currentTrick += turn[:len(turn)-2]
+            self.stackTop = turn[:len(turn)-2]
+
             #did the player finish?
-            if len(self.players[self.turn]) == 0:
+            if len(self.cardHands[self.turn]) == 0:
                 self.finished[self.turn] = len(self.spentCards)
             
-            #inform the others about the turn
-            for i in range(1, 4):
+            #inform the others about the turnfor i in range(1, 4):
                 self.players[(self.turn+i)%4].seeTurn(turn, self.turn)
 
             noBombCounter = 0 #How many players have chosen not to put down a bomb
@@ -95,6 +103,12 @@ class gameMaster:
 
                 for i in range(4):
                     b = self.players[i].bomb()
+
+                    #Check whether only legal cards are played
+                    for c in b[:len(b)-2]:
+                        if (not c in self.cardHands[i]) or (c in self.spentCards):
+                            self.handleIllegalPlays(i)
+                            break
                     
                     #Check small Tichu (and legality):
                     if b[len(b)-1]:
@@ -103,10 +117,12 @@ class gameMaster:
                         else:
                             self.smallTichu[i] = True
                     
-                    #set spentCards:
-                    for c in turn[:len(turn)-1]:
+                    #set spentCards and current Trick:
+                    for c in b[:len(b)-1]:
                         self.spentCards.append(c)
-                        self.players[i].remove(c)
+                        self.cardHands[i].remove(c)
+                    self.currentTrick += b[:len(b)-2]
+                    self.stackTop = b[:len(b)-2]
 
                     #handle bomb (if put down)
                     if len(b) > 1:
@@ -116,6 +132,9 @@ class gameMaster:
                         #show the bomb to everyone:
                         for j in range(1, 4):
                             self.players[(i+j)%4].showBomb(b, i)
+                        break
+                    else:
+                        noBombCounter += 1
 
 
             #handle the case that everyone knocked:
@@ -153,9 +172,9 @@ class gameMaster:
 
                 #Give away handcards:
                 if last == 0 or last == 2:
-                    self.playerPoints[1] += pointValue[self.cardHands[last]]
+                    self.playerPoints[1] += pointValue(self.cardHands[last])
                 else:
-                    self.playerPoints[0] += pointValue[self.cardHands[last]]
+                    self.playerPoints[0] += pointValue(self.cardHands[last])
 
                 #Add up points:
                 self.playerPoints[0] += self.playerPoints[2]
@@ -186,19 +205,22 @@ class gameMaster:
                         self.pointsB += 200
                     else:
                         self.pointsB -= 200
+        print("Finished the round: "+str(self.pointsA)+" - "+str(self.pointsB))
     
     def handleIllegalPlays(self, playerID): #If the player does an illegal move, 200 points are deducted and 200 are awarded to the other team
+        print("Detected an illegal play")
         self.legalRound = False
         if playerID == 0 or playerID == 2:
-            self.A -= 200
-            self.B += 200
+            self.pointsA -= 200
+            self.pointsB += 200
         else:
-            self.B -= 200
-            self.A += 200
+            self.pointsB -= 200
+            self.pointsA += 200
 
     def startRound(self):
+        print("Starting a new round")
         #generate card stack
-        self.cardStack = self.controlCardStack
+        self.cardStack = copy.deepcopy(self.controlCardStack)
 
         #Has no rule been violated?
         self.legalRound = True
@@ -262,10 +284,11 @@ class gameMaster:
             schupfStorage[rightID(i)][0] = schupfAway[2]
         for i in range(4):
             self.players[i].getSchupf(schupfStorage[i])
+            self.cardHands[i] += schupfStorage[i]
 
         #Who's turn is it
         self.turn = 0
-        while not (4, 1) in self.cardHands[self.turn]:
+        while not (1, 4) in self.cardHands[self.turn]:
             self.turn += 1
 
         #Who finished when?

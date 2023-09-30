@@ -39,25 +39,27 @@ class Tplayer:
     def seeTurn(self, turn, player): #receives the turn of an opponent and index of player who made the turn
         if len(turn) == 2: #the player knocked
             self.knockCounter += 1
-            if(self.knockCounter == 4):
+            if(self.knockCounter == 3):
                 self.upperTrick = []
                 self.knockCounter = 0
+        else:
+            self.upperTrick = turn[:len(turn)-2]
+
         if turn[len(turn)-1] != None: #the player has a wish:
             self.wish = turn[len(turn)-1]
         pass 
 
     def turn(self): #returns (empty) list of cards to be put down, second-last element is boolean: small Tichu?, last element: integer of card as wish
         output = []
-        if len(self.upperTrick) <= 1 and self.wish != None and self.wish in self.cards:
-            output.append(self.wish) #The handling of the wish is not correct yet!
-            self.cards.remove(self.wish)
-            self.knockCounter = 0
-        elif self.upperTrick == []:
+        if self.upperTrick == []:
             output.append(self.cards[0])
             self.cards.remove(output[0])
             self.knockCounter = 0
         else:
-            self.knockCounter = 1
+            self.knockCounter += 1
+            if(self.knockCounter == 3):
+                self.upperTrick = []
+                self.knockCounter = 0
         output.append(False)
         output.append(None)
         return output
