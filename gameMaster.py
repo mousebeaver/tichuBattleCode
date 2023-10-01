@@ -4,6 +4,9 @@ import tplayer as tplayer2
 import tplayer as tplayer3
 import numpy as np
 import copy
+import time
+import gui
+import pygame
 
 #IDs of other players in relation to player with ID i
 def partnerID(i):
@@ -36,6 +39,8 @@ class gameMaster:
         self.pointsA = 0 #points of the teams (0, 2)
         self.pointsB = 0 #player(1, 3)
         self.controlCardStack = [(j+2, i) for j in range(13) for i in range(4)] + [(j, 4) for j in range(4)] #the whole set of cards
+        self.visualize = gui.Screen()
+        self.visualize.display_players()
         print("Finished the initialization of the Game")
 
     def theGame(self): #game loop
@@ -44,6 +49,18 @@ class gameMaster:
             #Play a single round
             self.startRound()
             self.playRound()
+
+        print("The game ended")
+        self.visualize.display_scores(self.pointsA, self.pointsB, 30, 30)
+        if self.pointsA >= 1000 and self.pointsB < 1000:
+            self.visualize.display_text("Team A won!!!")
+        elif self.pointsB >= 1000 and self.pointsA < 1000:
+            self.visualize.display_text("Team B won!!!")
+        else:
+            self.visualize.display_text("A draw...")
+        pygame.display.flip()
+
+        time.sleep(100000) #A long time ago, in a galaxy far, far away...
 
     def startRound(self):
         print("Starting a new round")
@@ -125,6 +142,7 @@ class gameMaster:
     def playRound(self): #actually do a round
         print("========================>Playing the round<========================")
         while (not (len(self.cardHands[0]) == 0 and len(self.cardHands[2]) == 0)) and (not (len(self.cardHands[1]) == 0 and len(self.cardHands[3]) == 0)) and self.legalRound:
+            
             #if a player is already done and should put down a card, make another player play
             if self.currentTrick == [] and len(self.cardHands[self.turn]) == 0:
                 self.knockCounter = 0
@@ -158,7 +176,7 @@ class gameMaster:
                     break
 
             if not self.legalRound:
-                pass
+                return None
 
             #set wish/Tichu/alreadyPlayed/knockCounter/spentCards/hands of players/currentTrick
             if turn[len(turn)-2] == True: 
@@ -177,7 +195,18 @@ class gameMaster:
                 self.knockCounter += 1
 
             self.currentTrick += turn[:len(turn)-2]
-            self.stackTop = turn[:len(turn)-2]
+            if len(turn) > 2:
+                self.stackTop = turn[:len(turn)-2]
+
+            #visualize the turn
+            self.visualize.display_cards(self.stackTop)
+            self.visualize.display_scores(score_A=self.pointsA,score_B=self.pointsB,x=30,y=30)
+            self.visualize.display_tichus(630,40,self.smallTichu,self.greatTichu)
+            self.visualize.display_nums_of_remaining_cards([len(self.cardHands[i]) for i in range(4)])
+            #self.visualize.display_text("Halloooooooooooo")
+            self.visualize.display_who_is_the_current_player(self.turn)
+            pygame.display.flip()
+            time.sleep(self.moveDuration)
 
             #did the player finish?
             if len(self.cardHands[self.turn]) == 0:
@@ -212,17 +241,27 @@ class gameMaster:
                     for c in b[:len(b)-1]:
                         self.spentCards.append(c)
                         self.cardHands[i].remove(c)
-                    self.currentTrick += b[:len(b)-2]
-                    self.stackTop = b[:len(b)-2]
+                    if len(b) > 1:
+                        self.currentTrick += b[:len(b)-1]
+                        self.stackTop = b[:len(b)-1]
 
                     #handle bomb (if put down)
                     if len(b) > 1:
                         self.alreadyPlayed[i] = True
                         noBombCounter = 0
                         self.knockCounter = 3 #No not-bomb is possible any more
-                        #show the bomb to everyone:
+
+                        #show the bomb to every player:
                         for j in range(1, 4):
                             self.players[(i+j)%4].showBomb(b, i)
+
+                        #show the bomb to the spectators:
+                        self.visualize.display_cards(self.stackTop)
+                        self.visualize.display_scores(score_A=self.pointsA,score_B=self.pointsB,x=30,y=30)
+                        self.visualize.display_tichus(630,40,self.smallTichu,self.greatTichu)
+                        self.visualize.display_nums_of_remaining_cards([len(self.cardHands[i]) for i in range(4)])
+                        pygame.display.flip()
+                        time.sleep(self.moveDuration)
                         break
                     else:
                         noBombCounter += 1
@@ -309,11 +348,15 @@ class gameMaster:
         if playerID == 0 or playerID == 2:
             self.pointsA -= 200
             self.pointsB += 200
+            self.visualize.display_text("Rule violation by Team A")
+            pygame.display.flip()
         else:
             self.pointsB -= 200
             self.pointsA += 200
-
+            self.visualize.display_text("Rule violation by Team B")
+            pygame.display.flip()
+        time.sleep(self.moveDuration)
     
 
-g = gameMaster(1)
+g = gameMaster(0)
 g.theGame()
