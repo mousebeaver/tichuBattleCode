@@ -18,9 +18,9 @@ def rightID(i):
 def pointValue(cardList): #returns accumulated value of a list of cards
     output = 0
     for c in cardList:
-        if c.first == 5: #the card is a 5
+        if c[0] == 5: #the card is a 5
             output += 5
-        elif c.first == 10 or c.first == 13: #the card is a 10 or a king
+        elif c[0] == 10 or c[0] == 13: #the card is a 10 or a king
             output += 10
         elif c == (2, 4): #the card is the dragon
             output += 25
@@ -35,7 +35,7 @@ class gameMaster:
         self.moveDuration = moveDuration
         self.pointsA = 0 #points of the teams (0, 2)
         self.pointsB = 0 #player(1, 3)
-        self.controlCardStack = [(j, i) for j in range(13) for i in range(4)] + [(j, 4) for j in range(4)] #the whole set of cards
+        self.controlCardStack = [(j+2, i) for j in range(13) for i in range(4)] + [(j, 4) for j in range(4)] #the whole set of cards
         print("Finished the initialization of the Game")
 
     def theGame(self): #game loop
@@ -44,178 +44,6 @@ class gameMaster:
             #Play a single round
             self.startRound()
             self.playRound()
-
-    def playRound(self): #actually do a round
-        print("Playing the round")
-        while (not (len(self.cardHands[0]) == 0 and len(self.cardHands[2]) == 0)) and (not (len(self.cardHands[1]) == 0 and len(self.cardHands[3]) == 0)) and self.legalRound:
-            #ask for a turn
-            turn = self.players[self.turn].turn() #The turn the player actually does            
-
-            #check whether the turn is illegal...
-            #...based on claiming a small Tichu
-            if turn[len(turn)-2] == True and (self.smallTichu[self.turn] or self.playedAlready[self.turn] or self.greatTichu[self.turn]): 
-                self.handleIllegalPlays(self.turn)
-                break
-
-            #...based on making an illegal wish
-            w = turn[len(turn)-1]
-            if turn[len(turn)-1] != None and (self.wish != None or turn[0] != (1, 4) or len(turn) != 3 or (not w in self.controlCardStack) or w.second == 4): 
-                self.handleIllegalPlays(self.turn)
-                break
-
-            #...based on playing illegal cards
-            for c in turn[:len(turn)-2]:
-                if (not c in self.cardHands[self.turn]) or (c in self.spentCards):
-                    self.handleIllegalPlays(self.turn)
-                    break
-
-
-            #set wish/Tichu/alreadyPlayed/knockCounter/spentCards/hands of players/currentTrick
-            if turn[len(turn)-2] == True: 
-                self.smallTichu[self.player[self.turn]] = True #The player claimed a small Tichu
-
-            if turn[len(turn)-1] != None: 
-                self.wish = turn[len(turn)-1] #There is a wish
-
-            print(len(turn))
-            if len(turn) > 2:
-                self.knockCounter = 0
-                self.playedAlready[self.turn] = True
-                for c in turn[:len(turn)-2]:
-                    self.spentCards.append(c)
-                    self.cardHands[self.turn].remove(c)
-            else:
-                self.knockCounter += 1
-
-            self.currentTrick += turn[:len(turn)-2]
-            self.stackTop = turn[:len(turn)-2]
-
-            #did the player finish?
-            if len(self.cardHands[self.turn]) == 0:
-                self.finished[self.turn] = len(self.spentCards)
-            
-            #inform the others about the turnfor i in range(1, 4):
-                self.players[(self.turn+i)%4].seeTurn(turn, self.turn)
-
-            noBombCounter = 0 #How many players have chosen not to put down a bomb
-            while noBombCounter < 4 and self.legalRound:
-                #Ask everyone for a bomb:
-
-                for i in range(4):
-                    b = self.players[i].bomb()
-
-                    #Check whether only legal cards are played
-                    for c in b[:len(b)-2]:
-                        if (not c in self.cardHands[i]) or (c in self.spentCards):
-                            self.handleIllegalPlays(i)
-                            break
-                    
-                    #Check small Tichu (and legality):
-                    if b[len(b)-1]:
-                        if self.playedAlready[i]:
-                            self.handleIllegalPlays(i)
-                        else:
-                            self.smallTichu[i] = True
-                    
-                    #set spentCards and current Trick:
-                    for c in b[:len(b)-1]:
-                        self.spentCards.append(c)
-                        self.cardHands[i].remove(c)
-                    self.currentTrick += b[:len(b)-2]
-                    self.stackTop = b[:len(b)-2]
-
-                    #handle bomb (if put down)
-                    if len(b) > 1:
-                        self.alreadyPlayed[i] = True
-                        noBombCounter = 0
-                        self.knockCounter = 3 #No not-bomb is possible any more
-                        #show the bomb to everyone:
-                        for j in range(1, 4):
-                            self.players[(i+j)%4].showBomb(b, i)
-                        break
-                    else:
-                        noBombCounter += 1
-
-
-            #handle the case that everyone knocked:
-            if self.knockCounter == 3:
-                self.playerPoints[self.turn] += pointValue(self.currentTrick)
-                self.currentTrick = []
-                self.stackTop = []
-                self.knockCounter = 0
-
-            #set the player who can make the next turn
-            self.turn = (self.turn+1)%4
-            while len(self.cardHands[self.turn]) == 0:
-                self.turn = (self.turn+1)%4
-
-        if(self.legalRound):
-            #Award points after a round that has finished legally
-            first = 0 #Who finished first?
-            for i in range(1, 4):
-                if self.finished[first] == None or (self.finished[i] != None and self.finished[i] < self.finished[first]):
-                    first = i
-
-            #Double win?
-            if len(self.cardHands[0]) > 0 and len(self.cardHands[2]) > 0:
-                self.pointsB += 200
-            elif len(self.cardHands[1]) > 0 and len(self.cardHands[3]) > 0:
-                self.pointsA += 200
-            else: #No double win                    
-                last = 0 #Who has not finished
-                while len(self.cardHands[last]) > 0:
-                    last += 1
-
-                #Give away won tricks:
-                self.playerPoints[first] += self.playerPoints[last]
-                self.playerPoints[last] = 0
-
-                #Give away handcards:
-                if last == 0 or last == 2:
-                    self.playerPoints[1] += pointValue(self.cardHands[last])
-                else:
-                    self.playerPoints[0] += pointValue(self.cardHands[last])
-
-                #Add up points:
-                self.playerPoints[0] += self.playerPoints[2]
-                self.playerPoints[1] += self.playerPoints[3] 
-                self.pointsA += self.playerPoints[0]
-                self.pointsB += self.playerPoints[1]
-
-            #Process Tichus:
-            for i in [0, 2]:
-                if self.smallTichu[i]:
-                    if i == first:
-                        self.pointsA += 100
-                    else:
-                        self.pointsA -= 100
-                if self.greatTichu[i]:
-                    if i == first:
-                        self.pointsA += 200
-                    else:
-                        self.pointsA -= 200
-            for i in [1, 3]:
-                if self.smallTichu[i]:
-                    if i == first:
-                        self.pointsB += 100
-                    else:
-                        self.pointsB -= 100
-                if self.greatTichu[i]:
-                    if i == first:
-                        self.pointsB += 200
-                    else:
-                        self.pointsB -= 200
-        print("Finished the round: "+str(self.pointsA)+" - "+str(self.pointsB))
-    
-    def handleIllegalPlays(self, playerID): #If the player does an illegal move, 200 points are deducted and 200 are awarded to the other team
-        print("Detected an illegal play")
-        self.legalRound = False
-        if playerID == 0 or playerID == 2:
-            self.pointsA -= 200
-            self.pointsB += 200
-        else:
-            self.pointsB -= 200
-            self.pointsA += 200
 
     def startRound(self):
         print("Starting a new round")
@@ -293,3 +121,195 @@ class gameMaster:
 
         #Who finished when?
         self.finished = [None, None, None, None] #After how many cards (totally played) did the player finish?
+
+    def playRound(self): #actually do a round
+        print("========================>Playing the round<========================")
+        while (not (len(self.cardHands[0]) == 0 and len(self.cardHands[2]) == 0)) and (not (len(self.cardHands[1]) == 0 and len(self.cardHands[3]) == 0)) and self.legalRound:
+            #if a player is already done and should put down a card, make another player play
+            if self.currentTrick == []:
+                self.knockCounter = 0
+                self.turn = rightID(self.turn)
+                for i in range(4):
+                    self.players[i].getToPlay(self.turn)
+            
+            #ask for a turn
+            turn = self.players[self.turn].turn() #The turn the player actually does       
+
+            #check whether the turn is illegal...
+            #...based on claiming a small Tichu
+            if turn[len(turn)-2] == True and (self.smallTichu[self.turn] or self.playedAlready[self.turn] or self.greatTichu[self.turn]): 
+                self.handleIllegalPlays(self.turn)
+                break
+
+            #...based on making an illegal wish
+            w = turn[len(turn)-1]
+            if turn[len(turn)-1] != None and (self.wish != None or turn[0] != (1, 4) or len(turn) != 3 or (not w in self.controlCardStack) or w.second == 4): 
+                self.handleIllegalPlays(self.turn)
+                break
+
+            #...based on playing illegal cards
+            for c in turn[:len(turn)-2]:
+                if (not c in self.cardHands[self.turn]) or (c in self.spentCards):
+                    self.handleIllegalPlays(self.turn)
+                    break
+
+            if not self.legalRound:
+                pass
+
+            #set wish/Tichu/alreadyPlayed/knockCounter/spentCards/hands of players/currentTrick
+            if turn[len(turn)-2] == True: 
+                self.smallTichu[self.player[self.turn]] = True #The player claimed a small Tichu
+
+            if turn[len(turn)-1] != None: 
+                self.wish = turn[len(turn)-1] #There is a wish
+
+            if len(turn) > 2:
+                self.knockCounter = 0
+                self.playedAlready[self.turn] = True
+                for c in turn[:len(turn)-2]:
+                    self.spentCards.append(c)
+                    self.cardHands[self.turn].remove(c)
+            else:
+                self.knockCounter += 1
+
+            self.currentTrick += turn[:len(turn)-2]
+            self.stackTop = turn[:len(turn)-2]
+
+            #did the player finish?
+            if len(self.cardHands[self.turn]) == 0:
+                self.finished[self.turn] = len(self.spentCards)
+
+            
+            #inform the others about the turn
+            for i in range(1, 4):
+                self.players[(self.turn+i)%4].seeTurn(turn, self.turn)
+
+            noBombCounter = 0 #How many players have chosen not to put down a bomb
+            while noBombCounter < 4 and self.legalRound:
+                #Ask everyone for a bomb:
+
+                for i in range(4):
+                    b = self.players[i].bomb()
+
+                    #Check whether only legal cards are played
+                    for c in b[:len(b)-2]:
+                        if (not c in self.cardHands[i]) or (c in self.spentCards):
+                            self.handleIllegalPlays(i)
+                            break
+                    
+                    #Check small Tichu (and legality):
+                    if b[len(b)-1]:
+                        if self.playedAlready[i]:
+                            self.handleIllegalPlays(i)
+                        else:
+                            self.smallTichu[i] = True
+                    
+                    #set spentCards and current Trick:
+                    for c in b[:len(b)-1]:
+                        self.spentCards.append(c)
+                        self.cardHands[i].remove(c)
+                    self.currentTrick += b[:len(b)-2]
+                    self.stackTop = b[:len(b)-2]
+
+                    #handle bomb (if put down)
+                    if len(b) > 1:
+                        self.alreadyPlayed[i] = True
+                        noBombCounter = 0
+                        self.knockCounter = 3 #No not-bomb is possible any more
+                        #show the bomb to everyone:
+                        for j in range(1, 4):
+                            self.players[(i+j)%4].showBomb(b, i)
+                        break
+                    else:
+                        noBombCounter += 1
+
+
+            #handle the case that everyone knocked (or the game is now over) -> the table has to be cleared!:
+            if self.knockCounter == 3 or (len(self.cardHands[0]) == 0 and len(self.cardHands[2]) == 0) or (len(self.cardHands[1]) == 0 and len(self.cardHands[3]) == 0):
+                self.playerPoints[self.turn] += pointValue(self.currentTrick)
+                self.currentTrick = []
+                self.stackTop = []
+                self.knockCounter = 0
+
+            #set the player who can make the next turn
+            self.turn = (self.turn+1)%4
+
+        if(self.legalRound):
+            print("Total points: "+str(self.playerPoints[0]) + ", "+str(self.playerPoints[1]) + ", "+str(self.playerPoints[2]) + ", "+str(self.playerPoints[3]))
+            print("CardHands: ")
+            print(self.cardHands)
+            
+            #Award points after a round that has finished legally
+            first = 0 #Who finished first?
+            for i in range(1, 4):
+                if self.finished[first] == None or (self.finished[i] != None and self.finished[i] < self.finished[first]):
+                    first = i
+            print("Player "+str(first)+" finished first")
+
+            #Double win?
+            if len(self.cardHands[0]) > 0 and len(self.cardHands[2]) > 0:
+                self.pointsB += 200
+            elif len(self.cardHands[1]) > 0 and len(self.cardHands[3]) > 0:
+                self.pointsA += 200
+            else: #No double win                    
+                last = 0 #Who has not finished?
+                while len(self.cardHands[last]) == 0:
+                    last += 1
+
+                #Give away won tricks:
+                self.playerPoints[first] += self.playerPoints[last]
+                self.playerPoints[last] = 0
+
+                #Give away handcards:
+                if last == 0 or last == 2:
+                    self.playerPoints[1] += pointValue(self.cardHands[last])
+                    self.cardHands[last] = []
+                else:
+                    self.playerPoints[0] += pointValue(self.cardHands[last])
+                    self.cardHands[last] = []
+
+                #Add up points:
+                self.playerPoints[0] += self.playerPoints[2]
+                self.playerPoints[1] += self.playerPoints[3] 
+                self.pointsA += self.playerPoints[0]
+                self.pointsB += self.playerPoints[1]
+
+            #Process Tichus:
+            for i in [0, 2]:
+                if self.smallTichu[i]:
+                    if i == first:
+                        self.pointsA += 100
+                    else:
+                        self.pointsA -= 100
+                if self.greatTichu[i]:
+                    if i == first:
+                        self.pointsA += 200
+                    else:
+                        self.pointsA -= 200
+            for i in [1, 3]:
+                if self.smallTichu[i]:
+                    if i == first:
+                        self.pointsB += 100
+                    else:
+                        self.pointsB -= 100
+                if self.greatTichu[i]:
+                    if i == first:
+                        self.pointsB += 200
+                    else:
+                        self.pointsB -= 200
+        print("Finished the round: "+str(self.pointsA)+" - "+str(self.pointsB))
+    
+    def handleIllegalPlays(self, playerID): #If the player does an illegal move, 200 points are deducted and 200 are awarded to the other team
+        print("================>Detected an illegal play")
+        self.legalRound = False
+        if playerID == 0 or playerID == 2:
+            self.pointsA -= 200
+            self.pointsB += 200
+        else:
+            self.pointsB -= 200
+            self.pointsA += 200
+
+    
+
+g = gameMaster(1)
+g.theGame()

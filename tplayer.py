@@ -1,6 +1,6 @@
 """
 Cards are represented by pairs of integers:
--the first integer is the value. For special cards: 1->One, 0->Hound, 2->Dragon , 3->Phoenix, else 2-14
+-the first integer is the value. For special cards:  0->Hound, 1->One, 2->Dragon , 3->Phoenix, else 2-14
 -the second integer is the color (0-3 for normal colours, 4 for special cards)
 """
 
@@ -51,15 +51,16 @@ class Tplayer:
 
     def turn(self): #returns (empty) list of cards to be put down, second-last element is boolean: small Tichu?, last element: integer of card as wish
         output = []
-        if self.upperTrick == []:
-            output.append(self.cards[0])
+        if self.upperTrick == [] and len(self.cards) > 0:
+            output.append(self.cards[0]) #The player can put down a card
             self.cards.remove(output[0])
             self.knockCounter = 0
         else:
-            self.knockCounter += 1
+            self.knockCounter += 1 #The player "knocks" if he is already finished!!!
             if(self.knockCounter == 3):
                 self.upperTrick = []
                 self.knockCounter = 0
+        self.upperTrick = []
         output.append(False)
         output.append(None)
         return output
@@ -69,4 +70,9 @@ class Tplayer:
     
     def showBomb(self, bomb, player): #receives the bomb as list (last element is boolean for small Tichu) and the id of the player who put it down
         self.knockCounter = 0
+        self.upperTrick = bomb
         pass
+
+    def getToPlay(self, id): #The player with the given ID receives the right to play (at an empty stack of cards)
+        self.knockCounter = 0
+        self.upperTrick = []
