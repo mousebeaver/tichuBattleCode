@@ -4,6 +4,8 @@ Cards are represented by pairs of integers:
 -the second integer is the color (0-3 for normal colours, 4 for special cards)
 """
 
+from tichuCards import *
+
 class Tplayer:
     def __init__(self, firstEight, ids): #ids is list of player ids: [self, left, partner, right]
         self.cards = firstEight #List of the card currently in the hand of the player
