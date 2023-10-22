@@ -307,10 +307,21 @@ class gameMaster:
 
                         #handle the case that everyone knocked (or the game is now over) -> the table has to be cleared!:
                         if self.knockCounter == 3 or (len(self.cardHands[0]) == 0 and len(self.cardHands[2]) == 0) or (len(self.cardHands[1]) == 0 and len(self.cardHands[3]) == 0):
-                            self.playerPoints[self.turn] += pointValue(self.currentTrick)
-                            self.currentTrick = []
-                            self.stackTop = []
-                            self.knockCounter = 0
+                            if self.stackTop == [(2, 4)]:
+                                #The trick was won by the dragon
+                                receiverIndex = self.players[self.turn].donateDragon()
+                                if receiverIndex != rightID(self.turn) and receiverIndex != leftID(self.turn):
+                                    #The player tries to not give the dragon away!
+                                    self.handleIllegalPlays(self.turn)
+                                self.playersPoints[receiverIndex] += pointValue(self.currentTrick)
+                                self.currentTrick = []
+                                self.stackTop = []
+                                self.knockCounter = 0
+                            else:
+                                self.playerPoints[self.turn] += pointValue(self.currentTrick)
+                                self.currentTrick = []
+                                self.stackTop = []
+                                self.knockCounter = 0
 
                         #set the player who can make the next turn
                         self.turn = (self.turn+1)%4

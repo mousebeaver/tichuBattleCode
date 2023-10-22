@@ -76,3 +76,9 @@ class Tplayer:
     def getToPlay(self, id): #The player with the given ID receives the right to play (at an empty stack of cards)
         self.knockCounter = 0
         self.upperTrick = []
+
+    def donateDragon(self): #Return the id the dragon should be donated to?
+        return self.ids[0]
+    
+    def seeDonation(self, id): #Gets the id of the player the dragon is donated to
+        pass
