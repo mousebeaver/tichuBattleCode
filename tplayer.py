@@ -44,6 +44,10 @@ class Tplayer:
                 self.knockCounter = 0
         else:
             self.upperTrick = turn[:len(turn)-2]
+        
+        if (0,4) in turn: #There was a hound
+            self.upperTrick = []
+            self.knockCounter = 0
 
         if turn[len(turn)-1] != None: #the player has a wish:
             self.wish = turn[len(turn)-1]

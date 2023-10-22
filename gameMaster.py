@@ -145,7 +145,6 @@ class gameMaster:
             
             #if a player is already done and should put down a card, make another player play
             while self.currentTrick == [] and len(self.cardHands[self.turn]) == 0:
-                self.knockCounter = 0
                 self.turn = rightID(self.turn)
                 if not (self.currentTrick == [] and len(self.cardHands[self.turn]) == 0):
                     for i in range(4):
