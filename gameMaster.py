@@ -183,6 +183,10 @@ class gameMaster:
                     self.handleIllegalPlays(self.turn)
                     break
 
+            #...based on not playing a card even though the player has to do so:
+            if self.currentTrick == [] and len(turn) == 2:
+                self.handleIllegalPlays(self.turn)
+
             if not self.legalRound:
                 return None
             
