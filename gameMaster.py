@@ -165,7 +165,7 @@ class gameMaster:
 
             #...based on making an illegal wish
             w = turn[len(turn)-1]
-            if turn[len(turn)-1] != None and (self.wish != None or turn[0] != (1, 4) or len(turn) != 3 or (not w in self.controlCardStack) or w.second == 4): 
+            if turn[len(turn)-1] != None and (self.wish != None or (not (1, 4) in turn) or len(turn) != 3 or (not w in self.controlCardStack) or w.second == 4): 
                 self.handleIllegalPlays(self.turn)
                 break
 
