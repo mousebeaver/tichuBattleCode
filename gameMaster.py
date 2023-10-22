@@ -157,6 +157,13 @@ class gameMaster:
             print(turn)
             print("")
 
+
+
+
+
+
+
+
             #check whether the turn is illegal...
             #...based on claiming a small Tichu
             if turn[len(turn)-2] == True and (self.smallTichu[self.turn] or self.playedAlready[self.turn] or self.greatTichu[self.turn]): 
@@ -177,6 +184,13 @@ class gameMaster:
 
             if not self.legalRound:
                 return None
+            
+
+
+
+
+
+
 
             #set wish/Tichu/alreadyPlayed/knockCounter/spentCards/hands of players/currentTrick
             if turn[len(turn)-2] == True: 
@@ -198,6 +212,11 @@ class gameMaster:
             if len(turn) > 2:
                 self.stackTop = turn[:len(turn)-2]
 
+
+
+
+
+
             #visualize the turn
             self.visualize.display_cards(self.stackTop)
             self.visualize.display_scores(score_A=self.pointsA,score_B=self.pointsB,x=30,y=30)
@@ -208,6 +227,12 @@ class gameMaster:
             pygame.display.flip()
             time.sleep(self.moveDuration)
 
+
+
+
+
+
+
             #did the player finish?
             if len(self.cardHands[self.turn]) == 0:
                 self.finished[self.turn] = len(self.spentCards)
@@ -217,65 +242,82 @@ class gameMaster:
             for i in range(1, 4):
                 self.players[(self.turn+i)%4].seeTurn(turn, self.turn)
 
-            noBombCounter = 0 #How many players have chosen not to put down a bomb
-            while noBombCounter < 4 and self.legalRound:
-                #Ask everyone for a bomb:
-
-                for i in range(4):
-                    b = self.players[i].bomb()
-
-                    #Check whether only legal cards are played
-                    for c in b[:len(b)-2]:
-                        if (not c in self.cardHands[i]) or (c in self.spentCards):
-                            self.handleIllegalPlays(i)
-                            break
-                    
-                    #Check small Tichu (and legality):
-                    if b[len(b)-1]:
-                        if self.playedAlready[i]:
-                            self.handleIllegalPlays(i)
-                        else:
-                            self.smallTichu[i] = True
-                    
-                    #set spentCards and current Trick:
-                    for c in b[:len(b)-1]:
-                        self.spentCards.append(c)
-                        self.cardHands[i].remove(c)
-                    if len(b) > 1:
-                        self.currentTrick += b[:len(b)-1]
-                        self.stackTop = b[:len(b)-1]
-
-                    #handle bomb (if put down)
-                    if len(b) > 1:
-                        self.alreadyPlayed[i] = True
-                        noBombCounter = 0
-                        self.knockCounter = 3 #No not-bomb is possible any more
-
-                        #show the bomb to every player:
-                        for j in range(1, 4):
-                            self.players[(i+j)%4].showBomb(b, i)
-
-                        #show the bomb to the spectators:
-                        self.visualize.display_cards(self.stackTop)
-                        self.visualize.display_scores(score_A=self.pointsA,score_B=self.pointsB,x=30,y=30)
-                        self.visualize.display_tichus(630,40,self.smallTichu,self.greatTichu)
-                        self.visualize.display_nums_of_remaining_cards([len(self.cardHands[i]) for i in range(4)])
-                        pygame.display.flip()
-                        time.sleep(self.moveDuration)
-                        break
-                    else:
-                        noBombCounter += 1
-
-
-            #handle the case that everyone knocked (or the game is now over) -> the table has to be cleared!:
-            if self.knockCounter == 3 or (len(self.cardHands[0]) == 0 and len(self.cardHands[2]) == 0) or (len(self.cardHands[1]) == 0 and len(self.cardHands[3]) == 0):
-                self.playerPoints[self.turn] += pointValue(self.currentTrick)
+            
+            if self.stackTop == [(0, 4)]: #The player put down the hound
+                #The table has to be cleared:
                 self.currentTrick = []
                 self.stackTop = []
                 self.knockCounter = 0
+                #The partner gets to play:
+                self.turn = partnerID(self.turn)
+            else: #It is possible to put down a bomb
+                noBombCounter = 0 #How many players have chosen not to put down a bomb
+                while noBombCounter < 4 and self.legalRound:
+                    #Ask everyone for a bomb:
 
-            #set the player who can make the next turn
-            self.turn = (self.turn+1)%4
+                    for i in range(4):
+                        b = self.players[i].bomb()
+
+                        #Check whether only legal cards are played
+                        for c in b[:len(b)-2]:
+                            if (not c in self.cardHands[i]) or (c in self.spentCards):
+                                self.handleIllegalPlays(i)
+                                break
+                        
+                        #Check small Tichu (and legality):
+                        if b[len(b)-1]:
+                            if self.playedAlready[i]:
+                                self.handleIllegalPlays(i)
+                            else:
+                                self.smallTichu[i] = True
+                        
+                        #set spentCards and current Trick:
+                        for c in b[:len(b)-1]:
+                            self.spentCards.append(c)
+                            self.cardHands[i].remove(c)
+                        if len(b) > 1:
+                            self.currentTrick += b[:len(b)-1]
+                            self.stackTop = b[:len(b)-1]
+
+                        #handle bomb (if put down)
+                        if len(b) > 1:
+                            self.alreadyPlayed[i] = True
+                            noBombCounter = 0
+                            self.knockCounter = 3 #No not-bomb is possible any more
+
+                            #show the bomb to every player:
+                            for j in range(1, 4):
+                                self.players[(i+j)%4].showBomb(b, i)
+
+                            #show the bomb to the spectators:
+                            self.visualize.display_cards(self.stackTop)
+                            self.visualize.display_scores(score_A=self.pointsA,score_B=self.pointsB,x=30,y=30)
+                            self.visualize.display_tichus(630,40,self.smallTichu,self.greatTichu)
+                            self.visualize.display_nums_of_remaining_cards([len(self.cardHands[i]) for i in range(4)])
+                            pygame.display.flip()
+                            time.sleep(self.moveDuration)
+                            break
+                        else:
+                            noBombCounter += 1
+
+                        #handle the case that everyone knocked (or the game is now over) -> the table has to be cleared!:
+                        if self.knockCounter == 3 or (len(self.cardHands[0]) == 0 and len(self.cardHands[2]) == 0) or (len(self.cardHands[1]) == 0 and len(self.cardHands[3]) == 0):
+                            self.playerPoints[self.turn] += pointValue(self.currentTrick)
+                            self.currentTrick = []
+                            self.stackTop = []
+                            self.knockCounter = 0
+
+                        #set the player who can make the next turn
+                        self.turn = (self.turn+1)%4
+
+
+
+
+
+
+
+
+
 
         if(self.legalRound):
             print("Total points: "+str(self.playerPoints[0]) + ", "+str(self.playerPoints[1]) + ", "+str(self.playerPoints[2]) + ", "+str(self.playerPoints[3]))
@@ -358,5 +400,5 @@ class gameMaster:
         time.sleep(self.moveDuration)
     
 
-g = gameMaster(0)
+g = gameMaster(0.5)
 g.theGame()
