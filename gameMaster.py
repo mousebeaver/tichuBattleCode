@@ -187,10 +187,16 @@ class gameMaster:
             if turn[len(turn)-2] == True: 
                 self.smallTichu[self.player[self.turn]] = True #The player claimed a small Tichu
 
+            if self.wish == None and ((self.wish, 0) in turn or (self.wish, 1) in turn or (self.wish, 2) in turn or (self.wish, 3) in turn):
+                #The player fulfilled the wish
+                self.wish = None
+
             if turn[len(turn)-1] != None: 
-                self.wish = turn[len(turn)-1] #There is a wish
+                #There is a wish
+                self.wish = turn[len(turn)-1] 
 
             if len(turn) > 2:
+                #The player did not knock
                 self.knockCounter = 0
                 self.playedAlready[self.turn] = True
                 for c in turn[:len(turn)-2]:
@@ -202,6 +208,7 @@ class gameMaster:
             self.currentTrick += turn[:len(turn)-2]
             if len(turn) > 2:
                 self.stackTop = turn[:len(turn)-2]
+
 
 
 
