@@ -144,11 +144,12 @@ class gameMaster:
         while (not (len(self.cardHands[0]) == 0 and len(self.cardHands[2]) == 0)) and (not (len(self.cardHands[1]) == 0 and len(self.cardHands[3]) == 0)) and self.legalRound:
             
             #if a player is already done and should put down a card, make another player play
-            if self.currentTrick == [] and len(self.cardHands[self.turn]) == 0:
+            while self.currentTrick == [] and len(self.cardHands[self.turn]) == 0:
                 self.knockCounter = 0
                 self.turn = rightID(self.turn)
-                for i in range(4):
-                    self.players[i].getToPlay(self.turn)
+                if not (self.currentTrick == [] and len(self.cardHands[self.turn]) == 0):
+                    for i in range(4):
+                        self.players[i].getToPlay(self.turn)
             
             #ask for a turn
             turn = self.players[self.turn].turn() #The turn the player actually does
