@@ -72,4 +72,55 @@ def identifyCombination(cardList, prevCardList):
         
     if len(cardList) == 5:
         #Maybe a fullHouse
+        if phoenix in cardList:
+            cardList.erase(phoenix)
+            if cardList[0][0] == cardList[1][0] and cardList[2][0] == cardList[3][0]:
+                cardList.append(phoenix)
+                return ("fullHouse", cardList[3][0])
+            cardList.append(phoenix)
+        elif cardList[0][0] == cardList[1][0] and cardList[0][0] == cardList[2][0] and cardList[3][0] == cardList[4][0]:
+            return ("fullHouse", cardList[0][0])
+        elif cardList[0][0] == cardList[1][0] and cardList[3][0] == cardList[2][0] and cardList[2][0] == cardList[4][0]:
+            return ("fullHouse", cardList[4][0])
+        
+    if len(cardList) >= 5:
+        #Maybe a straigt
+        pcounter = 0
+        if phoenix in cardList:
+            cardList.erase(phoenix)
+            pcounter += 1
+        straight = True
+        for i in range(1, len(cardList)):
+            if cardList[i][0] == cardList[i-1][0]+2 and pcounter > 0:
+                pcounter -= 1
+            elif cardList[i][0] != cardList[i-1][0]+1:
+                straight = False
+                break
+        cardList.append(phoenix)
+        if straight:
+            return ("straight", cardList[0][0])
+
+
+
+    if len(cardList) >= 2 and len(cardList)%2 == 0:
+        #Maybe a pairStraight
         pass
+
+    if len(cardList) == 4:
+        #Maybe a FourBomb
+        if (not phoenix in cardList) and (not dragon in cardList) and (not hound in cardList) and (not one in cardList):
+            if cardList[0][0] == cardList[1][0] and cardList[0][0] == cardList[2][0] and cardList[0][0] == cardList[3][0]:
+                return ("fourBomb", cardList[0][0]) 
+
+    if len(cardList) >= 5:
+        #Maybe a StraightBomb
+        if (not phoenix in cardList) and (not dragon in cardList) and (not hound in cardList) and (not one in cardList):
+            straight = True
+            for i in range(1, len(cardList)):
+                if cardList[i][0] != cardList[i-1][0]+1:
+                    straight = False
+                    break
+            if straight:
+                return ("streetBomb", cardList[0][0])
+
+    return None
