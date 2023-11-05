@@ -169,6 +169,16 @@ class gameMaster:
                     self.handleIllegalPlays(self.turn)
                     break
 
+            #...based on playing the same card more than once:
+            tmpCards = turn[:len(turn)-2]
+            tmpCards.sort()
+            previousCard = None
+            for c in tmpCards:
+                if c == previousCard:
+                    self.handleIllegalPlays(self.turn)
+                    break
+                previousCard = c
+
             #...based on not playing a card even though the player has to do so:
             if self.currentTrick == [] and len(turn) == 2:
                 self.handleIllegalPlays(self.turn)
