@@ -60,6 +60,7 @@ class gameMaster:
         #current Trick
         self.currentTrick = [] #List of cards in the current trick
         self.stackTop = [] #Combination on the top of the stack
+        self.combinationHeight = identifyCombination([], []) #Height of the current combination on the top of the stack (-1 if empty)
 
         #points of the players
         self.playerPoints = [0, 0, 0, 0] #Number of points, every player has already aquired
@@ -183,6 +184,11 @@ class gameMaster:
             if self.currentTrick == [] and len(turn) == 2:
                 self.handleIllegalPlays(self.turn)
 
+            #...based on playing an illegal combination:
+            if not legalCombination(self.combinationHeight, identifyCombination(turn[:len(turn)-2], self.stackTop)):
+                self.handleIllegalPlays(self.turn)
+            
+            #Closing this section of handling illegal plays:
             if not self.legalRound:
                 return None
             
@@ -193,7 +199,7 @@ class gameMaster:
 
 
 
-            #set wish/Tichu/alreadyPlayed/knockCounter/spentCards/hands of players/currentTrick
+            #set wish/Tichu/alreadyPlayed/knockCounter/spentCards/hands of players/currentTrick/combinationHeight
             if turn[len(turn)-2] == True: 
                 self.smallTichu[self.player[self.turn]] = True #The player claimed a small Tichu
 
@@ -217,6 +223,7 @@ class gameMaster:
 
             self.currentTrick += turn[:len(turn)-2]
             if len(turn) > 2:
+                self.combinationHeight = identifyCombination(turn[:len(turn)-2], self.stackTop)
                 self.stackTop = turn[:len(turn)-2]
 
 
@@ -254,6 +261,7 @@ class gameMaster:
             if self.stackTop == [(0, 4)]: #The player put down the hound
                 #The table has to be cleared:
                 self.currentTrick = []
+                self.combinationHeight = identifyCombination([], [])
                 self.stackTop = []
                 self.knockCounter = 0
                 #The partner gets to play:
@@ -318,11 +326,13 @@ class gameMaster:
                                     self.handleIllegalPlays(self.turn)
                                 self.playersPoints[receiverIndex] += pointValue(self.currentTrick)
                                 self.currentTrick = []
+                                self.combinationHeight = identifyCombination([], [])
                                 self.stackTop = []
                                 self.knockCounter = 0
                             else:
                                 self.playerPoints[self.turn] += pointValue(self.currentTrick)
                                 self.currentTrick = []
+                                self.combinationHeight = identifyCombination([], [])
                                 self.stackTop = []
                                 self.knockCounter = 0
 

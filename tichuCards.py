@@ -163,3 +163,7 @@ def identifyCombination(cardList, prevCardList):
                 return ("streetBomb", cardList[0][0])
 
     return None
+
+def legalCombination(prevCombination, combination): #Checks whether it is legal to put down combination on prevCombination
+    #Both are given as the output of the identification method
+    pass
