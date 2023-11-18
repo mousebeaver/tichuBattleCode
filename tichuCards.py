@@ -54,7 +54,9 @@ def identifyCombination(cardList, prevCardList):
             #the phoenix
             value = 1.5
             if prevCardList != []:
-                value = prevCardList[0][0]+0.5 #We assume that this list does not contain the dragon
+                value = prevCardList[0][0]+0.5
+                if prevCardList[0][0] == dragon:
+                    value = -1 #Impossible to put the phoenix on the dragon
             return ("singleCard", value)
         else:
             #some other single Card
@@ -84,27 +86,64 @@ def identifyCombination(cardList, prevCardList):
             return ("fullHouse", cardList[4][0])
         
     if len(cardList) >= 5:
-        #Maybe a straigt
-        pcounter = 0
-        if phoenix in cardList:
-            cardList.erase(phoenix)
-            pcounter += 1
-        straight = True
-        for i in range(1, len(cardList)):
-            if cardList[i][0] == cardList[i-1][0]+2 and pcounter > 0:
-                pcounter -= 1
-            elif cardList[i][0] != cardList[i-1][0]+1:
-                straight = False
-                break
-        cardList.append(phoenix)
-        if straight:
-            return ("straight", cardList[0][0])
+        #Maybe a straight
+        if (not dragon in cardList) and (not hound in cardList):
+            pcounter = 0
+            containP = False
+            if phoenix in cardList:
+                cardList.erase(phoenix)
+                pcounter += 1
+                containP = True
+            straight = True
+            for i in range(1, len(cardList)):
+                if cardList[i][0] == cardList[i-1][0]+2 and pcounter > 0:
+                    pcounter -= 1
+                elif cardList[i][0] != cardList[i-1][0]+1:
+                    straight = False
+                    break
+            if containP:
+                cardList.append(phoenix)
+            if straight:
+                return ("straight", cardList[0][0])
 
 
 
     if len(cardList) >= 2 and len(cardList)%2 == 0:
         #Maybe a pairStraight
-        pass
+        if (not dragon in cardList) and (not one in cardList) and (not hound in cardList):
+            pcounter = 0
+            containP = False
+            if phoenix in cardList:
+                cardList.erase(phoenix)
+                containP = True
+                pcounter += 1
+            index = 0
+            pairStraight = True
+            while index < len(cardList) and pairStraight:
+                if index > 0 and cardList[index][0] != cardList[index-1][0]+1:
+                    pairStraight = False #No increasing sequence with the right differences possible
+                
+                if index == len(cardList-1): #The last card
+                    #Can it be paired with the phoenix?
+                    if pcounter == 0:
+                        pairStraight = False
+                    else:
+                        pcounter -= 1
+                        index += 1
+                else:
+                    if cardList[index][0] == cardList[index+1][0]: #correct pair
+                        index += 2
+                    elif pcounter > 0: #Can be paired with a phoenix
+                        pcounter -= 1
+                        index += 1
+                    else:
+                        pairStraight = False
+            if containP:
+                cardList.append(phoenix)
+            if pairStraight:
+                return ("pairStraight", cardList[0][0])
+            
+
 
     if len(cardList) == 4:
         #Maybe a FourBomb
