@@ -22,6 +22,7 @@ def pointValue(cardList): #returns accumulated value of a list of cards
 def identifyCombination(cardList, prevCardList):
     """
     returns the type of the combination in cardList as one of the following values:
+    - "knock"
     - "singleCard"
     - "triple"
     - "fullHouse"
@@ -31,9 +32,10 @@ def identifyCombination(cardList, prevCardList):
     - "straightBomb"
     - None
 
-    prevCardList is the trick the current CardList is put one (important for single card phoenix)
+    prevCardList is the trick the current CardList is put on (important for single card phoenix)
 
     this value is combined with its height to form a tuple
+    - knock => No tuple made
     - singleCard => value of the card (1000 for dragon)
     - fullHouse => value of the tripel
     - anything else => lowest card in the cardList
@@ -44,6 +46,9 @@ def identifyCombination(cardList, prevCardList):
     """
 
     cardList.sort()
+
+    if len(cardList) == 0:
+        return "knock"
 
     if len(cardList) == 1:
         #A single card
@@ -164,6 +169,43 @@ def identifyCombination(cardList, prevCardList):
 
     return None
 
+"""
+    returns the type of the combination in cardList as one of the following values:
+    - "knock"
+    - "singleCard"
+    - "triple"
+    - "fullHouse"
+    - "straight"
+    - "pairStraight (a pair is a pairStraight of length 1)"
+    - "fourBomb"
+    - "straightBomb"
+    - None
+
+    prevCardList is the trick the current CardList is put on (important for single card phoenix)
+
+    this value is combined with its height to form a tuple
+    - knock => No tuple made
+    - singleCard => value of the card (1000 for dragon)
+    - fullHouse => value of the tripel
+    - anything else => lowest card in the cardList
+    - None => No tuple made
+
+    in the case of (pair-)straights (or straightBombs), their length is the third element of the tupel
+    in the case of pairStreets, this is the number of pairs!
+    """
+
 def legalCombination(prevCombination, combination): #Checks whether it is legal to put down combination on prevCombination
     #Both are given as the output of the identification method
-    pass
+    
+    if combination == None: #The player did not put down a legal combination
+        print("HERE1")
+        return False
+    
+    if combination == "knock": #The player did not knock
+        return True
+    
+    if prevCombination == None or prevCombination == "knock": #The player played the first combination
+        return True 
+
+    print("HERE2: {}, {}".format(combination, prevCombination))        
+    return False
