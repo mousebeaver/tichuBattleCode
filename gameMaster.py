@@ -36,6 +36,7 @@ class gameMaster:
             #Play a single round
             self.startRound()
             self.playRound()
+            self.visualize.display_scores(self.pointsA, self.pointsB, 30, 30)
 
         print("The game ended")
         self.visualize.display_scores(self.pointsA, self.pointsB, 30, 30)
@@ -293,7 +294,8 @@ class gameMaster:
                             self.cardHands[i].remove(c)
                         if len(b) > 1:
                             self.currentTrick += b[:len(b)-1]
-                            self.stackTop = b[:len(b)-1]
+                            self.stack
+                            p = b[:len(b)-1]
 
                         #handle bomb (if put down)
                         if len(b) > 1:

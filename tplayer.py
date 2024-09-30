@@ -84,7 +84,7 @@ class Tplayer:
         self.upperTrick = []
 
     def donateDragon(self): #Return the id the dragon should be donated to?
-        return self.ids[0]
+        return self.ids[1]
     
     def seeDonation(self, id): #Gets the id of the player the dragon is donated to
         pass
