@@ -198,14 +198,34 @@ def legalCombination(prevCombination, combination): #Checks whether it is legal 
     #Both are given as the output of the identification method
     
     if combination == None: #The player did not put down a legal combination
-        print("HERE1")
         return False
     
-    if combination == "knock": #The player did not knock
+    if combination == "knock": #The player did knock
         return True
     
     if prevCombination == None or prevCombination == "knock": #The player played the first combination
         return True 
 
-    print("HERE2: {}, {}".format(combination, prevCombination))        
+    if prevCombination[0] == combination[0] and not (combination[0] == "fourBomb" or combination[0] == "straightBomb"): #The player played the same combination, but no bomb
+        if combination[1] > prevCombination[1] and (len(combination) == 2 or combination[2] == prevCombination[2]):
+            return True
+        else:
+            return False
+
+    if combination[0] == "fourBomb" or combination[0] == "straightBomb": #The player played a bomb
+        if prevCombination[0] != "fourBomb" and prevCombination[0] != "straightBomb": 
+            return True #The previous play was not a bomb
+        elif combination[0] == "straightBomb" and prevCombination == "fourBomb":
+            return True #The previous play was an inferior bomb type
+        elif combination[0] == "fourBomb": #Two fourBombs
+            if combination[1] > prevCombination[1]:
+                return True
+            else:
+                return False
+        elif combination[0] == "straightBomb": #Two straightBombs
+            if combination[2] > prevCombination[2] or (combination[2] > prevCombination[2] and combination[1] > prevCombination[1]):
+                return True
+            else:
+                return False
+            
     return False

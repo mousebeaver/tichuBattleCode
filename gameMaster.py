@@ -326,7 +326,7 @@ class gameMaster:
                         if receiverIndex != rightID(self.turn) and receiverIndex != leftID(self.turn):
                             #The player tries to not give the dragon away!
                             self.handleIllegalPlays(self.turn)
-                        self.playersPoints[receiverIndex] += pointValue(self.currentTrick)
+                        self.playerPoints[receiverIndex] += pointValue(self.currentTrick)
                         self.currentTrick = []
                         self.combinationHeight = identifyCombination([], [])
                         self.stackTop = []
@@ -431,5 +431,5 @@ class gameMaster:
         time.sleep(self.moveDuration)
     
 
-g = gameMaster(1)
+g = gameMaster(0.05)
 g.theGame()
